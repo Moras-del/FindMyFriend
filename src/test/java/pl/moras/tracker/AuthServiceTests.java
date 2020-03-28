@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import pl.moras.exceptions.UsernameAlreadyExists;
 import pl.moras.model.User;
+import pl.moras.model.UserDto;
 import pl.moras.repo.UserRepo;
 import pl.moras.services.AuthService;
 import pl.moras.services.IAuthService;
@@ -18,7 +20,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-public class AuthServiceTests {
+class AuthServiceTests {
 
     @Mock
     private UserRepo userRepo;
@@ -34,6 +36,9 @@ public class AuthServiceTests {
         when(userRepo.findByName(anyString())).thenReturn(Optional.empty());
         when(userRepo.findByName(exampleUser().getName())).thenReturn(Optional.of(exampleUser()));
         when(userRepo.save(any(User.class))).thenAnswer(arg->arg.getArgument(0));
+        when(userRepo.existsByName(anyString())).thenReturn(false);
+        when(userRepo.existsByName(exampleUser().getName())).thenReturn(true);
+        when(passwordEncoder.encode(anyString())).thenReturn("hashed");
         authService = new AuthService(userRepo, passwordEncoder);
     }
 
@@ -49,6 +54,18 @@ public class AuthServiceTests {
         assertThrows(UsernameNotFoundException.class, ()->authService.getUser("non-existing user"));
     }
 
+    @Test
+    void should_register_user(){
+        User user = authService.addUser("newUser", "haslo");
+        assertEquals("newUser", user.getName());
+        assertEquals("hashed", user.getPassword());
+        assertNotNull(user.getLastOnline());
+    }
+
+    @Test
+    void should_fail_register_user(){
+        assertThrows(UsernameAlreadyExists.class, ()->authService.addUser("user", "haslo"));
+    }
 
     private User exampleUser(){
         User user = new User();
