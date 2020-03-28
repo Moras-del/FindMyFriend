@@ -26,6 +26,7 @@ public class AuthService implements IAuthService {
         if (userRepo.existsByName(username))
            throw new UsernameAlreadyExists(username);
         User user = new User();
+        user.setLastOnline(LocalDateTime.now());
         user.setName(username);
         user.setPassword(passwordEncoder.encode(password));
         return userRepo.save(user);
