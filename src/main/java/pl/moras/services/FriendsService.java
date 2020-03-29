@@ -21,16 +21,17 @@ public class FriendsService implements IFriendsService {
 
 
     @Override
-    public ResponseEntity setFriendRequest(Principal principal, String friendName) {
+    public ResponseEntity sendFriendRequest(Principal principal, String friendName) {
         User user = getUser(principal.getName());
         User friend = getUser(friendName);
-        if(user.getFriends()==null||!user.getFriends().contains(friend)) {
+        if((!principal.getName().equals(friendName)) && (friend.getFriends()==null||!friend.getFriends().contains(user))) {
             friend.addFriendRequest(user);
             userRepo.save(friend);
             return ResponseEntity.ok().build();
-        } else {
-            return ResponseEntity.badRequest().body("Użytkownik już jest twoim znajomym");
-        }
+        } else if (principal.getName().equals(friendName))
+            return ResponseEntity.badRequest().body("Nie możesz zaprosić samego siebie");
+          else
+            return ResponseEntity.badRequest().body("Użytkownik już jest Twoim znajomym");
     }
 
     @Override

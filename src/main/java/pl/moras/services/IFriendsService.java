@@ -7,7 +7,7 @@ import java.security.Principal;
 
 public interface IFriendsService {
 
-    ResponseEntity setFriendRequest(Principal principal, String friendName);
+    ResponseEntity sendFriendRequest(Principal principal, String friendName);
 
     User acceptRequest(Principal principal, String friendName);
 
