@@ -22,7 +22,7 @@ public class FriendsController {
 
     @PostMapping("/request")
     public ResponseEntity addFriend(Principal principal, @RequestParam String friendName){
-        return friendsService.setFriendRequest(principal, friendName);
+        return friendsService.sendFriendRequest(principal, friendName);
     }
 
     @PostMapping("/accept")
