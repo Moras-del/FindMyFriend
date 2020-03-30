@@ -70,6 +70,7 @@ class FriendServiceTests {
         User user = new User();
         user.setName("user");
         user.setPassword("haslo");
+        user.addFriend(friend());
         return user;
     }
 
@@ -84,7 +85,6 @@ class FriendServiceTests {
         User user = new User();
         user.setName("friend");
         user.setPassword("haslo");
-        user.addFriend(currentUser());
         return user;
     }
 }

@@ -24,7 +24,7 @@ public class FriendsService implements IFriendsService {
     public ResponseEntity sendFriendRequest(Principal principal, String friendName) {
         User user = getUser(principal.getName());
         User friend = getUser(friendName);
-        if((!principal.getName().equals(friendName)) && (friend.getFriends()==null||!friend.getFriends().contains(user))) {
+        if((!principal.getName().equals(friendName)) && (user.getFriends()==null||!user.getFriends().contains(friend))) {
             friend.addFriendRequest(user);
             userRepo.save(friend);
             return ResponseEntity.ok().build();
