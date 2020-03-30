@@ -62,7 +62,7 @@ public class FriendsService implements IFriendsService {
             .remove(friend);
 
         userRepo.save(user);
-        return null;
+        return ResponseEntity.ok().build();
     }
 
     private User getUser(String name){
