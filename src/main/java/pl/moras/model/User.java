@@ -120,25 +120,7 @@ public class User {
         friendRequests.add(friendRequest);
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof User)) return false;
-        User user = (User) o;
-        return
-                Objects.equals(id, user.id) &&
-                Objects.equals(name, user.name) &&
-                Objects.equals(password, user.password) &&
-                Double.compare(user.latitude, latitude) == 0 &&
-                Double.compare(user.longitude, longitude) == 0 &&
-                trackEnabled == user.trackEnabled &&
-                Objects.equals(lastOnline, user.lastOnline) &&
-                Objects.equals(friends, user.friends) &&
-                Objects.equals(friendRequests, user.friendRequests);
-    }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, password, lastOnline, latitude, longitude, trackEnabled, friends, friendRequests);
-    }
+
+
 }
