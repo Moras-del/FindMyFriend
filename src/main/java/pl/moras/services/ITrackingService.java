@@ -12,5 +12,5 @@ public interface ITrackingService {
 
     void updateLocation(Principal principal, LocationDto locationDto);
 
-    void changeTracking(Principal principal, boolean enabled);
+    void changeTrackingState(Principal principal, boolean enabled);
 }

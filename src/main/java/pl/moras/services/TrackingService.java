@@ -33,7 +33,7 @@ public class TrackingService implements ITrackingService {
     }
 
     @Override
-    public void changeTracking(Principal principal, boolean enable) {
+    public void changeTrackingState(Principal principal, boolean enable) {
         User user = authService.getUser(principal.getName());
         user.setTrackEnabled(enable);
         user.setLastOnline(LocalDateTime.now());

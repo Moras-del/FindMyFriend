@@ -21,7 +21,7 @@ public class TrackingController {
 
     @PutMapping("/switch")
     public ResponseEntity switchTrackingMode(Principal principal, @RequestParam boolean enabled){
-        trackingService.changeTracking(principal, enabled);
+        trackingService.changeTrackingState(principal, enabled);
         return ResponseEntity.ok().build();
     }
 
