@@ -65,6 +65,7 @@ public class FriendsService implements IFriendsService {
         return ResponseEntity.ok().build();
     }
 
+
     private User getUser(String name){
          return userRepo.findByName(name)
                 .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika "+name));

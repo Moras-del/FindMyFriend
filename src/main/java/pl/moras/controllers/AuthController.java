@@ -7,9 +7,6 @@ import pl.moras.services.IAuthService;
 
 import java.security.Principal;
 
-
-
-
 //logowanie, rejestracja
 @RestController
 @RequestMapping("/auth")
