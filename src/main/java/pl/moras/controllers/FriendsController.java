@@ -31,12 +31,12 @@ public class FriendsController {
     }
 
     @PostMapping("/cancel")
-    public ResponseEntity cancelRequest(Principal principal, @RequestParam String friendName){
+    public User cancelRequest(Principal principal, @RequestParam String friendName){
         return friendsService.cancelRequest(principal, friendName);
     }
 
     @PostMapping("/delete")
-    public ResponseEntity deleteFriend(Principal principal, @RequestParam String friendName){
+    public User deleteFriend(Principal principal, @RequestParam String friendName){
         return friendsService.deleteFriend(principal, friendName);
     }
 }

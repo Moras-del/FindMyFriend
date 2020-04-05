@@ -11,7 +11,7 @@ public interface IFriendsService {
 
     User acceptRequest(Principal principal, String friendName);
 
-    ResponseEntity cancelRequest(Principal principal, String friendName);
+    User cancelRequest(Principal principal, String friendName);
 
-    ResponseEntity deleteFriend(Principal principal, String friendName);
+    User deleteFriend(Principal principal, String friendName);
 }

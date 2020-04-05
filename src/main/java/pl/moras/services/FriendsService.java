@@ -45,24 +45,21 @@ public class FriendsService implements IFriendsService {
     }
 
     @Override
-    public ResponseEntity cancelRequest(Principal principal, String friendName) {
+    public User cancelRequest(Principal principal, String friendName) {
         User user = getUser(principal.getName());
         User friend = getUser(friendName);
         user.getFriendRequest().remove(friend);
-        userRepo.save(user);
-        return ResponseEntity.ok().build();
+        return userRepo.save(user);
     }
 
     @Override
-    public ResponseEntity deleteFriend(Principal principal, String friendName) {
+    public User deleteFriend(Principal principal, String friendName) {
         User user = getUser(principal.getName());
         User friend = getUser(friendName);
 
         user.getFriends()
             .remove(friend);
-
-        userRepo.save(user);
-        return ResponseEntity.ok().build();
+        return userRepo.save(user);
     }
 
 

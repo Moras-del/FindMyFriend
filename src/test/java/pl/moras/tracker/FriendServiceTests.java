@@ -71,7 +71,7 @@ class FriendServiceTests {
 
         when(userRepo.findByName(principal.getName())).thenReturn(Optional.of(user));
         when(userRepo.findByName(friend.getName())).thenReturn(Optional.of(friend));
-
+        when(userRepo.save(any(User.class))).thenAnswer(arg->arg.getArgument(0));
         ResponseEntity responseEntity = friendsService.sendFriendRequest(principal, friend.getName());
 
         assertEquals("Użytkownik już jest Twoim znajomym", responseEntity.getBody());
@@ -104,10 +104,9 @@ class FriendServiceTests {
         when(userRepo.findByName(principal.getName())).thenReturn(Optional.of(user));
         when(userRepo.findByName(requestedUser.getName())).thenReturn(Optional.of(requestedUser));
 
-        ResponseEntity responseEntity = friendsService.cancelRequest(principal, requestedUser.getName());
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(user.getFriendRequest().isEmpty());
-        assertNull(user.getFriends());
+        User result = friendsService.cancelRequest(principal, requestedUser.getName());
+        assertTrue(result.getFriendRequest().isEmpty());
+        assertNull(result.getFriends());
     }
 
     @Test
@@ -119,10 +118,9 @@ class FriendServiceTests {
         when(userRepo.findByName(principal.getName())).thenReturn(Optional.of(user));
         when(userRepo.findByName(friend.getName())).thenReturn(Optional.of(friend));
 
-        ResponseEntity responseEntity = friendsService.deleteFriend(principal, friend.getName());
+        User result = friendsService.deleteFriend(principal, friend.getName());
 
-        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-        assertTrue(user.getFriends().isEmpty());
+        assertTrue(result.getFriends().isEmpty());
     }
 
     private User currentUser(){
