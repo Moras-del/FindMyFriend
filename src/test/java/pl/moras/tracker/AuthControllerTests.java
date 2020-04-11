@@ -2,50 +2,26 @@ package pl.moras.tracker;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.jayway.jsonpath.spi.json.GsonJsonProvider;
-import org.junit.Before;
-import org.junit.experimental.results.ResultMatchers;
-import org.junit.jupiter.api.BeforeAll;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.json.GsonJsonParser;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.json.GsonTester;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
-import org.springframework.http.RequestEntity;
-import org.springframework.http.converter.HttpMessageConverter;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import pl.moras.controllers.AuthController;
+
 import pl.moras.model.User;
 import pl.moras.model.UserDto;
-import pl.moras.repo.UserRepo;
 import pl.moras.services.IAuthService;
 
-import java.io.ObjectOutputStream;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.mockito.MockitoAnnotations.initMocks;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -98,11 +74,18 @@ class AuthControllerTests {
 
     @Test
     @WithMockUser(username = "principal")
-    void should_login() throws Exception {
+    void should_authenticate() throws Exception {
         String response = objectMapper.writeValueAsString(getUser("principal"));
         mockMvc.perform(get("/auth"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(response));
+    }
+
+    @Test
+    @WithAnonymousUser
+    void should_fail_authenticate() throws Exception {
+        mockMvc.perform(get("/auth"))
+                .andExpect(status().isUnauthorized());
     }
 
     User getUser(String name){

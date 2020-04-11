@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.moras.model.User;
 import pl.moras.services.IFriendsService;
 
+import javax.validation.constraints.NotNull;
 import java.security.Principal;
 
 
@@ -21,7 +22,7 @@ public class FriendsController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity addFriend(Principal principal, @RequestParam String friendName){
+    public ResponseEntity sendRequest(Principal principal, @RequestParam String friendName){
         return friendsService.sendFriendRequest(principal, friendName);
     }
 
