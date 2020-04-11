@@ -76,7 +76,6 @@ class FriendsControllerTests {
         String response = objectMapper.writeValueAsString(user);
 
         mockMvc.perform(post("/friends/accept")
-                .contentType(MediaType.APPLICATION_JSON)
                 .param("friendName", "friend"))
                 .andExpect(status().isOk())
                 .andExpect(content().json(response));
