@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import pl.moras.model.LocationDto;
 import pl.moras.services.ITrackingService;
 
+import javax.validation.Valid;
 import java.security.Principal;
 
 
@@ -27,7 +28,7 @@ public class TrackingController {
 
 
     @PutMapping("/update")
-    public ResponseEntity updateLocation(Principal principal, @RequestBody LocationDto locationDto){
+    public ResponseEntity updateLocation(Principal principal, @Valid @RequestBody LocationDto locationDto){
         trackingService.updateLocation(principal, locationDto);
         return ResponseEntity.ok().build();
     }

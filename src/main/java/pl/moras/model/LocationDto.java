@@ -1,22 +1,21 @@
 package pl.moras.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+
+
+@Getter
+@Setter
 public class LocationDto {
+
+    @Max(value = 90, message = "invalid latitude value")
+    @Min(value = -90, message = "invalid latitude value")
     double latitude;
+
+    @Max(value = 180, message = "invalid longitude value")
+    @Min(value = -180, message = "invalid longitude value")
     double longitude;
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
 }
