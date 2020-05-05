@@ -22,15 +22,15 @@ public class FriendsService implements IFriendsService {
 
     @Override
     public ResponseEntity sendFriendRequest(Principal principal, String friendName) {
+        if (principal.getName().equals(friendName))
+            return ResponseEntity.badRequest().body("Nie możesz zaprosić samego siebie");
         User user = getUser(principal.getName());
         User friend = getUser(friendName);
-        if((!principal.getName().equals(friendName)) && (user.getFriends()==null||!user.getFriends().contains(friend))) {
+        if(user.getFriends()==null||!user.getFriends().contains(friend)) {
             friend.addFriendRequest(user);
             userRepo.save(friend);
             return ResponseEntity.ok().build();
-        } else if (principal.getName().equals(friendName))
-            return ResponseEntity.badRequest().body("Nie możesz zaprosić samego siebie");
-          else
+        } else
             return ResponseEntity.badRequest().body("Użytkownik już jest Twoim znajomym");
     }
 
@@ -38,17 +38,17 @@ public class FriendsService implements IFriendsService {
     public User acceptRequest(Principal principal, String friendName) {
         User user = getUser(principal.getName());
         User friend = getUser(friendName);
-        user.getFriendRequest().remove(friend);
+        user.deleteFriendRequest(friend);
         user.addFriend(friend);
         friend.addFriend(user);
-        return userRepo.save(user);
+        return userRepo.save(friend);
     }
 
     @Override
     public User cancelRequest(Principal principal, String friendName) {
         User user = getUser(principal.getName());
-        User friend = getUser(friendName);
-        user.getFriendRequest().remove(friend);
+        User requestedUser = getUser(friendName);
+        user.deleteFriendRequest(requestedUser);
         return userRepo.save(user);
     }
 
@@ -56,9 +56,7 @@ public class FriendsService implements IFriendsService {
     public User deleteFriend(Principal principal, String friendName) {
         User user = getUser(principal.getName());
         User friend = getUser(friendName);
-
-        user.getFriends()
-            .remove(friend);
+        user.deleteFriend(friend);
         return userRepo.save(user);
     }
 

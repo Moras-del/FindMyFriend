@@ -12,6 +12,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import pl.moras.model.LocationDto;
+import pl.moras.services.ITrackingService;
+import pl.moras.services.TrackingService;
 
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -26,6 +28,9 @@ public class TrackingControllerTests {
     private MockMvc mockMvc;
 
     private ObjectMapper objectMapper;
+
+    @MockBean
+    private ITrackingService trackingService;
 
     @BeforeEach
     void setup(){
@@ -42,8 +47,8 @@ public class TrackingControllerTests {
     @Test
     void should_update_location() throws Exception {
         LocationDto locationDto = new LocationDto();
-        locationDto.setLatitude(10);
-        locationDto.setLongitude(30);
+        locationDto.setLatitude(100);
+        locationDto.setLongitude(200);
         String requestBody = objectMapper.writeValueAsString(locationDto);
 
         mockMvc.perform(put("/tracking/update")

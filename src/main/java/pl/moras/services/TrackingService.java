@@ -1,6 +1,7 @@
 package pl.moras.services;
 
 import org.springframework.stereotype.Service;
+import pl.moras.model.Location;
 import pl.moras.model.LocationDto;
 import pl.moras.model.User;
 import pl.moras.repo.UserRepo;
@@ -27,8 +28,7 @@ public class TrackingService implements ITrackingService {
     @Override
     public void updateLocation(Principal principal, LocationDto locationDto) {
         User user = authService.getUser(principal.getName());
-        user.setLatitude(locationDto.getLatitude());
-        user.setLongitude(locationDto.getLongitude());
+        user.setLocation(Location.of(locationDto));
         userRepo.save(user);
     }
 

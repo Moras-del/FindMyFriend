@@ -87,11 +87,11 @@ class FriendServiceTests {
         when(userRepo.findByName(principal.getName())).thenReturn(Optional.of(user));
         when(userRepo.findByName(requestedUser.getName())).thenReturn(Optional.of(requestedUser));
 
-        User result = friendsService.acceptRequest(principal, requestedUser.getName());
+        User friend = friendsService.acceptRequest(principal, requestedUser.getName());
 
-        assertTrue(result.getFriendRequest().isEmpty());
-        assertTrue(result.getFriends().contains(requestedUser));
-        assertTrue(requestedUser.getFriends().contains(result));
+        assertTrue(friend.getFriendRequests().isEmpty());
+        assertTrue(friend.getFriends().contains(user));
+        assertTrue(user.getFriends().contains(friend));
 
     }
 
@@ -105,8 +105,7 @@ class FriendServiceTests {
         when(userRepo.findByName(requestedUser.getName())).thenReturn(Optional.of(requestedUser));
 
         User result = friendsService.cancelRequest(principal, requestedUser.getName());
-        assertTrue(result.getFriendRequest().isEmpty());
-        assertNull(result.getFriends());
+        assertTrue(result.getFriendRequests().isEmpty());
     }
 
     @Test
@@ -114,7 +113,6 @@ class FriendServiceTests {
         User user = currentUser();
         User friend = friend();
         user.addFriend(friend);
-
         when(userRepo.findByName(principal.getName())).thenReturn(Optional.of(user));
         when(userRepo.findByName(friend.getName())).thenReturn(Optional.of(friend));
 

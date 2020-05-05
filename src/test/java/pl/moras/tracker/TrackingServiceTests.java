@@ -1,8 +1,10 @@
 package pl.moras.tracker;
 
+import org.junit.Ignore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
+import pl.moras.model.Location;
 import pl.moras.model.LocationDto;
 import pl.moras.model.User;
 import pl.moras.repo.UserRepo;
@@ -86,8 +88,7 @@ public class TrackingServiceTests {
 
         when(userRepo.findByName(principal.getName())).thenReturn(Optional.of(user));
         trackingService.updateLocation(principal, locationDto);
-        assertEquals(50, user.getLatitude());
-        assertEquals(100, user.getLongitude());
+        assertEquals(user.getLocation(), Location.of(50, 100));
         assertNotNull(user.getLastOnline());
     }
 
