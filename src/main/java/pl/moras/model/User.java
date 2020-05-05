@@ -2,26 +2,27 @@ package pl.moras.model;
 
 
 import com.fasterxml.jackson.annotation.*;
+import lombok.*;
 import org.neo4j.ogm.annotation.GeneratedValue;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Relationship;
 import org.neo4j.ogm.id.IdStrategy;
 import org.neo4j.ogm.id.InternalIdStrategy;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 @NodeEntity
-@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
+@Data
+@EqualsAndHashCode(exclude = "friends")
 public class User {
 
     @Id
     @GeneratedValue
     private Long id;
+
     private String name;
 
     @JsonIgnore
@@ -29,17 +30,22 @@ public class User {
 
     private LocalDateTime lastOnline;
 
-    private double latitude;
-    private double longitude;
+    @JsonUnwrapped
+    private Location location;
 
-    private boolean trackEnabled; //user chce żeby go widziano i chce ogladac innych
+    private boolean trackEnabled; //user wants to being seen and he wants to see others
 
     @Relationship(type = "FRIENDS")
-    private Set<User> friends;
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    @JsonIgnoreProperties(value = "friends")
+    private Set<User> friends = new HashSet<>();
 
     @Relationship(type = "REQUEST", direction = Relationship.INCOMING)
-    @JsonProperty("friend_request")
-    private Set<User> friendRequests;
+    @JsonProperty("friend_requests")
+    @Setter(AccessLevel.NONE)
+    @Getter(AccessLevel.NONE)
+    private Set<User> friendRequests = new HashSet<>();
 
     public User() { }
 
@@ -48,79 +54,29 @@ public class User {
         this.password = user.password;
     }
 
-    public Long getId() {
-        return id;
-    }
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public LocalDateTime getLastOnline() {
-        return lastOnline;
-    }
-    public void setLastOnline(LocalDateTime lastOnline) {
-        this.lastOnline = lastOnline;
-    }
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(double latitude) {
-        this.latitude = latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(double longitude) {
-        this.longitude = longitude;
-    }
-
-    public Set<User> getFriends() {
-        return friends;
-    }
     public void addFriend(User user){
-        if (friends ==null){
-            friends = new HashSet<>();
-        }
         friends.add(user);
     }
 
-    public boolean isTrackEnabled() {
-        return trackEnabled;
-    }
-    public void setTrackEnabled(boolean trackEnabled) {
-        this.trackEnabled = trackEnabled;
-    }
-
-    @JsonProperty("friend_request")
-    public Set<User> getFriendRequest() {
-        return friendRequests;
-    }
     public void addFriendRequest(User friendRequest) {
-        if (friendRequests==null){
-            friendRequests = new HashSet<>();
-        }
         friendRequests.add(friendRequest);
     }
 
+    public void deleteFriendRequest(User requestedUser){
+        friendRequests.remove(requestedUser);
+    }
 
+    public void deleteFriend(User friend){
+        friends.remove(friend);
+    }
+
+    public Set<User> getFriends() {
+        return Collections.unmodifiableSet(friends);
+    }
+
+    public Set<User> getFriendRequests(){
+        return Collections.unmodifiableSet(friendRequests);
+    }
 
 
 }
