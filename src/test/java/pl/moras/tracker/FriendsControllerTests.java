@@ -56,7 +56,7 @@ class FriendsControllerTests {
 
     @Test
     void should_send_request() throws Exception {
-        when(friendsService.sendFriendRequest(any(Principal.class), anyString())).thenReturn(ResponseEntity.ok().build());
+        when(friendsService.sendFriendRequest(anyString(), anyString())).thenReturn(ResponseEntity.ok().build());
 
         mockMvc.perform(post("/friends/request")
                 .param("friendName", "friend"))
@@ -65,8 +65,8 @@ class FriendsControllerTests {
 
     @Test
     void should_accept_friend_request() throws Exception {
-        when(friendsService.acceptRequest(any(Principal.class), anyString())).thenAnswer(arg->{
-            User user = getUser(((Principal)arg.getArgument(0)).getName());
+        when(friendsService.acceptRequest(anyString(), anyString())).thenAnswer(arg->{
+            User user = getUser(arg.getArgument(0));
             user.addFriend(getUser(arg.getArgument(1)));
             return user;
         });
@@ -83,7 +83,7 @@ class FriendsControllerTests {
 
     @Test
     void should_cancel_friend_request() throws Exception {
-        when(friendsService.cancelRequest(any(Principal.class), anyString())).thenReturn(getUser("user"));
+        when(friendsService.cancelRequest(anyString(), anyString())).thenReturn(getUser("user"));
         String response = objectMapper.writeValueAsString(getUser("user"));
 
         mockMvc.perform(post("/friends/cancel")
@@ -94,7 +94,7 @@ class FriendsControllerTests {
 
     @Test
     void should_delete_friend() throws Exception {
-        when(friendsService.deleteFriend(any(Principal.class), anyString())).thenReturn(getUser("user"));
+        when(friendsService.deleteFriend(anyString(), anyString())).thenReturn(getUser("user"));
         String response = objectMapper.writeValueAsString(getUser("user"));
 
         mockMvc.perform(post("/friends/delete")

@@ -1,5 +1,6 @@
 package pl.moras.tracker;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -12,6 +13,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import pl.moras.model.LocationDto;
+import pl.moras.services.IAuthService;
 import pl.moras.services.ITrackingService;
 import pl.moras.services.TrackingService;
 
@@ -32,23 +34,31 @@ public class TrackingControllerTests {
     @MockBean
     private ITrackingService trackingService;
 
+    @MockBean
+    private IAuthService authService;
+
     @BeforeEach
     void setup(){
         objectMapper = new ObjectMapper();
     }
 
     @Test
-    void should_change_tracking_state() throws Exception {
-        mockMvc.perform(put("/tracking/switch")
-                .param("enabled", "true"))
+    void should_enable_tracking() throws Exception {
+        mockMvc.perform(put("/tracking/enable"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void disableTracking() throws Exception {
+        mockMvc.perform(put("/tracking/disable"))
                 .andExpect(status().isOk());
     }
 
     @Test
     void should_update_location() throws Exception {
         LocationDto locationDto = new LocationDto();
-        locationDto.setLatitude(100);
-        locationDto.setLongitude(200);
+        locationDto.setLatitude(50);
+        locationDto.setLongitude(20);
         String requestBody = objectMapper.writeValueAsString(locationDto);
 
         mockMvc.perform(put("/tracking/update")
@@ -57,5 +67,16 @@ public class TrackingControllerTests {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void should_fail_update_location() throws Exception {
+        LocationDto locationDto = new LocationDto();
+        locationDto.setLongitude(200);
+        locationDto.setLatitude(-100);
+        String requestBody = objectMapper.writeValueAsString(locationDto);
 
+        mockMvc.perform(put("/tracking/update")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody))
+                .andExpect(status().isBadRequest());
+    }
 }
