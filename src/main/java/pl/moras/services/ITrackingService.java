@@ -8,9 +8,11 @@ import java.util.List;
 
 public interface ITrackingService {
 
-    List<User> getOnlineFriends(String name);
+    List<User> getOnlineFriends(String username);
 
-    void updateLocation(Principal principal, LocationDto locationDto);
+    void updateLocation(User user, LocationDto locationDto);
 
-    void changeTrackingState(Principal principal, boolean enabled);
+    void enableTracking(User user);
+
+    void disableTracking(User user);
 }

@@ -19,4 +19,5 @@ public interface UserRepo extends Neo4jRepository<User, Long> {
     List<User> findOnlineFriends(String name);
 
     boolean existsByName(String username);
+
 }

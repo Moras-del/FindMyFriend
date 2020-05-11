@@ -7,11 +7,11 @@ import java.security.Principal;
 
 public interface IFriendsService {
 
-    ResponseEntity sendFriendRequest(Principal principal, String friendName);
+    ResponseEntity sendFriendRequest(String requestSender, String requestReceiver);
 
-    User acceptRequest(Principal principal, String friendName);
+    User acceptRequest(String requestReceiver, String requestSender);
 
-    User cancelRequest(Principal principal, String friendName);
+    User cancelRequest(String requestReceiver, String requestSender);
 
-    User deleteFriend(Principal principal, String friendName);
+    User deleteFriend(String username, String friendName);
 }

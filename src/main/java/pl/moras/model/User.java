@@ -28,6 +28,7 @@ public class User {
     @JsonIgnore
     private String password;
 
+    @Setter(AccessLevel.NONE)
     private LocalDateTime lastOnline;
 
     @JsonUnwrapped
@@ -78,5 +79,8 @@ public class User {
         return Collections.unmodifiableSet(friendRequests);
     }
 
+    public void updateLastOnlineDate(){
+        lastOnline = LocalDateTime.now();
+    }
 
 }

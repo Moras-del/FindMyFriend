@@ -23,21 +23,21 @@ public class FriendsController {
 
     @PostMapping("/request")
     public ResponseEntity sendRequest(Principal principal, @RequestParam String friendName){
-        return friendsService.sendFriendRequest(principal, friendName);
+        return friendsService.sendFriendRequest(principal.getName(), friendName);
     }
 
     @PostMapping("/accept")
     public User acceptRequest(Principal principal, @RequestParam String friendName){
-       return friendsService.acceptRequest(principal, friendName);
+       return friendsService.acceptRequest(principal.getName(), friendName);
     }
 
     @PostMapping("/cancel")
     public User cancelRequest(Principal principal, @RequestParam String friendName){
-        return friendsService.cancelRequest(principal, friendName);
+        return friendsService.cancelRequest(principal.getName(), friendName);
     }
 
     @PostMapping("/delete")
     public User deleteFriend(Principal principal, @RequestParam String friendName){
-        return friendsService.deleteFriend(principal, friendName);
+        return friendsService.deleteFriend(principal.getName(), friendName);
     }
 }

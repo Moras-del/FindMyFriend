@@ -1,5 +1,6 @@
 package pl.moras.services;
 
+import lombok.AllArgsConstructor;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -11,22 +12,18 @@ import java.time.LocalDateTime;
 
 
 @Service
+@AllArgsConstructor
 public class AuthService implements IAuthService {
 
     private final UserRepo userRepo;
     private final PasswordEncoder passwordEncoder;
-
-    public AuthService(UserRepo userRepo, PasswordEncoder passwordEncoder){
-        this.userRepo = userRepo;
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Override
     public User addUser(String username, String password) {
         if (userRepo.existsByName(username))
            throw new UsernameAlreadyExists(username);
         User user = new User();
-        user.setLastOnline(LocalDateTime.now());
+        user.updateLastOnlineDate();
         user.setName(username);
         user.setPassword(passwordEncoder.encode(password));
         return userRepo.save(user);
@@ -36,7 +33,7 @@ public class AuthService implements IAuthService {
     public User getUser(String name) {
         User user = userRepo.findByName(name)
                 .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika "+name));
-        user.setLastOnline(LocalDateTime.now());
+        user.updateLastOnlineDate();
         return userRepo.save(user);
     }
 
