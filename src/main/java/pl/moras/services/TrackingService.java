@@ -1,5 +1,6 @@
 package pl.moras.services;
 
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import pl.moras.model.Location;
 import pl.moras.model.LocationDto;
@@ -11,14 +12,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@AllArgsConstructor
 public class TrackingService implements ITrackingService {
 
     private final UserRepo userRepo;
-    private final IAuthService authService;
-    public TrackingService(UserRepo userRepo, IAuthService authService) {
-        this.userRepo = userRepo;
-        this.authService = authService;
-    }
 
     @Override
     public List<User> getOnlineFriends(String name) {
@@ -26,17 +23,20 @@ public class TrackingService implements ITrackingService {
     }
 
     @Override
-    public void updateLocation(Principal principal, LocationDto locationDto) {
-        User user = authService.getUser(principal.getName());
+    public void updateLocation(User user, LocationDto locationDto) {
         user.setLocation(Location.of(locationDto));
         userRepo.save(user);
     }
 
     @Override
-    public void changeTrackingState(Principal principal, boolean enable) {
-        User user = authService.getUser(principal.getName());
-        user.setTrackEnabled(enable);
-        user.setLastOnline(LocalDateTime.now());
+    public void enableTracking(User user) {
+        user.setTrackEnabled(true);
+        userRepo.save(user);
+    }
+
+    @Override
+    public void disableTracking(User user) {
+        user.setTrackEnabled(false);
         userRepo.save(user);
     }
 
