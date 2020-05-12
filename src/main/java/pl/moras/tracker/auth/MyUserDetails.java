@@ -1,9 +1,9 @@
-package pl.moras.auth;
+package pl.moras.tracker.auth;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import pl.moras.model.User;
+import pl.moras.tracker.model.User;
 
 import java.util.Arrays;
 import java.util.Collection;
