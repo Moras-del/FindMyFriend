@@ -1,20 +1,17 @@
 package pl.moras.tracker;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import pl.moras.fakes.UserRepoTestImpl;
-import pl.moras.model.Location;
-import pl.moras.model.LocationDto;
-import pl.moras.model.User;
-import pl.moras.repo.UserRepo;
-import pl.moras.services.ITrackingService;
-import pl.moras.services.TrackingService;
+import pl.moras.tracker.model.Location;
+import pl.moras.tracker.model.LocationDto;
+import pl.moras.tracker.model.User;
+import pl.moras.tracker.repo.UserRepo;
+import pl.moras.tracker.services.ITrackingService;
+import pl.moras.tracker.services.TrackingService;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 public class TrackingServiceTests {
 
@@ -23,7 +20,7 @@ public class TrackingServiceTests {
 
     @Test
     void should_get_online_friends(){
-        List<User> onlineFriends = trackingService.getOnlineFriends("user");
+        List<User> onlineFriends = trackingService.getOnlineFriends("user").block();
         assertFalse(onlineFriends.isEmpty());
         assertTrue(onlineFriends.get(0).isTrackEnabled());
     }

@@ -1,6 +1,5 @@
 package pl.moras.tracker;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,11 +10,9 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import pl.moras.model.LocationDto;
-import pl.moras.services.IAuthService;
-import pl.moras.services.ITrackingService;
-import pl.moras.services.TrackingService;
+import pl.moras.tracker.model.LocationDto;
+import pl.moras.tracker.services.IAuthService;
+import pl.moras.tracker.services.ITrackingService;
 
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;

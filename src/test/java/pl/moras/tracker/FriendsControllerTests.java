@@ -1,26 +1,18 @@
 package pl.moras.tracker;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.experimental.results.ResultMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.client.RequestMatcher;
-import org.springframework.test.web.client.match.MockRestRequestMatchers;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
-import org.springframework.test.web.servlet.result.RequestResultMatchers;
-import pl.moras.model.User;
-import pl.moras.services.IFriendsService;
-
-import java.security.Principal;
+import pl.moras.tracker.model.User;
+import pl.moras.tracker.services.IFriendsService;
+import reactor.core.publisher.Mono;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -56,7 +48,7 @@ class FriendsControllerTests {
 
     @Test
     void should_send_request() throws Exception {
-        when(friendsService.sendFriendRequest(anyString(), anyString())).thenReturn(ResponseEntity.ok().build());
+        when(friendsService.sendFriendRequest(anyString(), anyString())).thenReturn(Mono.just(ResponseEntity.ok().build()));
 
         mockMvc.perform(post("/friends/request")
                 .param("friendName", "friend"))
@@ -83,7 +75,7 @@ class FriendsControllerTests {
 
     @Test
     void should_cancel_friend_request() throws Exception {
-        when(friendsService.cancelRequest(anyString(), anyString())).thenReturn(getUser("user"));
+        when(friendsService.cancelRequest(anyString(), anyString())).thenReturn(Mono.just(getUser("user")));
         String response = objectMapper.writeValueAsString(getUser("user"));
 
         mockMvc.perform(post("/friends/cancel")
@@ -94,7 +86,7 @@ class FriendsControllerTests {
 
     @Test
     void should_delete_friend() throws Exception {
-        when(friendsService.deleteFriend(anyString(), anyString())).thenReturn(getUser("user"));
+        when(friendsService.deleteFriend(anyString(), anyString())).thenReturn(Mono.just(getUser("user")));
         String response = objectMapper.writeValueAsString(getUser("user"));
 
         mockMvc.perform(post("/friends/delete")
