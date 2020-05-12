@@ -1,4 +1,4 @@
-package pl.moras.model;
+package pl.moras.tracker.model;
 
 public class UserDto {
     private String username;

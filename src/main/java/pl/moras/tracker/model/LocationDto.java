@@ -1,4 +1,4 @@
-package pl.moras.model;
+package pl.moras.tracker.model;
 
 import lombok.Getter;
 import lombok.Setter;

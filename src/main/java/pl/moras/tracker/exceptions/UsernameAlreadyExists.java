@@ -1,4 +1,4 @@
-package pl.moras.exceptions;
+package pl.moras.tracker.exceptions;
 
 public class UsernameAlreadyExists extends RuntimeException {
 

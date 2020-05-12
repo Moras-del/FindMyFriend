@@ -1,8 +1,6 @@
-package pl.moras.model;
+package pl.moras.tracker.model;
 
 import lombok.Value;
-
-import java.math.BigDecimal;
 
 @Value(staticConstructor = "of")
 public class Location {

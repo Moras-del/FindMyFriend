@@ -1,20 +1,15 @@
-package pl.moras.model;
+package pl.moras.tracker.model;
 
 
 import com.fasterxml.jackson.annotation.*;
 import lombok.*;
-import org.neo4j.ogm.annotation.GeneratedValue;
-import org.neo4j.ogm.annotation.Id;
-import org.neo4j.ogm.annotation.NodeEntity;
-import org.neo4j.ogm.annotation.Relationship;
-import org.neo4j.ogm.id.IdStrategy;
-import org.neo4j.ogm.id.InternalIdStrategy;
-import org.springframework.web.bind.annotation.GetMapping;
+
+import org.neo4j.springframework.data.core.schema.*;
 
 import java.time.LocalDateTime;
 import java.util.*;
 
-@NodeEntity
+@Node
 @Data
 @EqualsAndHashCode(exclude = "friends")
 public class User {
@@ -22,6 +17,7 @@ public class User {
     @Id
     @GeneratedValue
     private Long id;
+
 
     private String name;
 
@@ -42,7 +38,7 @@ public class User {
     @JsonIgnoreProperties(value = "friends")
     private Set<User> friends = new HashSet<>();
 
-    @Relationship(type = "REQUEST", direction = Relationship.INCOMING)
+    @Relationship(type = "REQUEST", direction = Relationship.Direction.INCOMING)
     @JsonProperty("friend_requests")
     @Setter(AccessLevel.NONE)
     @Getter(AccessLevel.NONE)

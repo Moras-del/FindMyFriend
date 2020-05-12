@@ -1,4 +1,4 @@
-package pl.moras.exceptions;
+package pl.moras.tracker.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;

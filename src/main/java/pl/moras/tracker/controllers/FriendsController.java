@@ -1,12 +1,12 @@
-package pl.moras.controllers;
+package pl.moras.tracker.controllers;
 
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import pl.moras.model.User;
-import pl.moras.services.IFriendsService;
+import pl.moras.tracker.model.User;
+import pl.moras.tracker.services.IFriendsService;
+import reactor.core.publisher.Mono;
 
-import javax.validation.constraints.NotNull;
 import java.security.Principal;
 
 
@@ -22,22 +22,22 @@ public class FriendsController {
     }
 
     @PostMapping("/request")
-    public ResponseEntity sendRequest(Principal principal, @RequestParam String friendName){
+    public Mono<ResponseEntity> sendRequest(Principal principal, @RequestParam String friendName){
         return friendsService.sendFriendRequest(principal.getName(), friendName);
     }
 
     @PostMapping("/accept")
-    public User acceptRequest(Principal principal, @RequestParam String friendName){
+    public Mono<User> acceptRequest(Principal principal, @RequestParam String friendName){
        return friendsService.acceptRequest(principal.getName(), friendName);
     }
 
     @PostMapping("/cancel")
-    public User cancelRequest(Principal principal, @RequestParam String friendName){
+    public Mono<User> cancelRequest(Principal principal, @RequestParam String friendName){
         return friendsService.cancelRequest(principal.getName(), friendName);
     }
 
     @PostMapping("/delete")
-    public User deleteFriend(Principal principal, @RequestParam String friendName){
+    public Mono<User> deleteFriend(Principal principal, @RequestParam String friendName){
         return friendsService.deleteFriend(principal.getName(), friendName);
     }
 }
