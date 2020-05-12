@@ -7,7 +7,6 @@ import pl.moras.tracker.model.User;
 import pl.moras.tracker.model.UserDto;
 import pl.moras.tracker.repo.UserRepo;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 
 @Service
@@ -21,7 +20,7 @@ public class AuthService implements IAuthService {
     public Mono<User> addUser(UserDto userDto) {
         return Mono.just(userDto)
                 .map(this::toUser)
-                .flatMap(userRepo::save).subscribeOn(Schedulers.newSingle("j"));
+                .flatMap(userRepo::save);
     }
 
     @Override

@@ -3,56 +3,72 @@ package pl.moras.tracker;
 
 import org.neo4j.springframework.data.repository.config.EnableReactiveNeo4jRepositories;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-//import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.HttpBasicServerAuthenticationEntryPoint;
+import org.springframework.web.reactive.HandlerAdapter;
+import org.springframework.web.reactive.HandlerMapping;
+import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
+import org.springframework.web.reactive.socket.WebSocketHandler;
+import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.repo.UserRepo;
 
+import java.util.HashMap;
+import java.util.Map;
+
+//import org.springframework.transaction.PlatformTransactionManager;
+
 @Configuration
-@EnableAutoConfiguration
-@ComponentScan(basePackages = "pl.moras")
+@EnableWebFluxSecurity
 @EnableReactiveNeo4jRepositories(basePackageClasses = UserRepo.class)
 @EntityScan(basePackageClasses = User.class)
-public class Config extends WebSecurityConfigurerAdapter {
+public class Config {
 
     @Autowired
-    private UserDetailsService userDetailsService;
-
+    WebSocketHandler webSocketHandler;
     @Autowired
-    private BasicAuthenticationEntryPoint authenticationEntryPoint;
+    private ReactiveUserDetailsService userDetailsService;
 
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(getPasswordEncoder());
-    }
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .authorizeRequests()
-                .antMatchers(HttpMethod.POST, "/auth").permitAll()
-                .anyRequest().authenticated()
+    @Bean
+    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity serverHttpSecurity) {
+        return serverHttpSecurity
+                .authorizeExchange()
+                .pathMatchers(HttpMethod.POST, "/auth").permitAll()
+                .anyExchange().permitAll()
                 .and()
-                .httpBasic()
-                .authenticationEntryPoint(authenticationEntryPoint);
+                .httpBasic().authenticationEntryPoint(new HttpBasicServerAuthenticationEntryPoint())
+                .and()
+                .csrf().disable()
+                .build();
     }
 
     @Bean
     public PasswordEncoder getPasswordEncoder(){
         return new BCryptPasswordEncoder(16);
+    }
+
+    @Bean
+    HandlerMapping webSocketHandlerMapping() {
+        Map<String, WebSocketHandler> map = new HashMap<>();
+        map.put("/tracker", webSocketHandler);
+        SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
+        handlerMapping.setOrder(1);
+        handlerMapping.setUrlMap(map);
+        return handlerMapping;
+    }
+
+    @Bean
+    HandlerAdapter handlerAdapter() {
+        return new WebSocketHandlerAdapter();
     }
 
 }
