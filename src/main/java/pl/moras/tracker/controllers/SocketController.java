@@ -9,10 +9,9 @@ import pl.moras.tracker.model.LocationDto;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.services.IAuthService;
 import pl.moras.tracker.services.ITrackingService;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.security.Principal;
-import java.util.List;
 
 @Controller
 @AllArgsConstructor
@@ -23,7 +22,7 @@ public class SocketController {
 
     @SendToUser("/queue/reply")
     @MessageMapping("/track")
-    public Mono<List<User>> test(Principal principal, @Payload LocationDto locationDto){
+    public Flux<User> test(Principal principal, @Payload LocationDto locationDto) {
         User user = authService.getUser(principal.getName()).block();
         trackingService.updateLocation(user, locationDto);
         return trackingService.getOnlineFriends(principal.getName());

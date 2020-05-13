@@ -1,15 +1,17 @@
 package pl.moras.tracker;
 
 
-import org.neo4j.springframework.data.repository.config.EnableReactiveNeo4jRepositories;
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
@@ -20,7 +22,6 @@ import org.springframework.web.reactive.handler.SimpleUrlHandlerMapping;
 import org.springframework.web.reactive.socket.WebSocketHandler;
 import org.springframework.web.reactive.socket.server.support.WebSocketHandlerAdapter;
 import pl.moras.tracker.model.User;
-import pl.moras.tracker.repo.UserRepo;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,14 +30,12 @@ import java.util.Map;
 
 @Configuration
 @EnableWebFluxSecurity
-@EnableReactiveNeo4jRepositories(basePackageClasses = UserRepo.class)
 @EntityScan(basePackageClasses = User.class)
-public class Config {
+@EnableReactiveMongoRepositories
+public class Config extends AbstractReactiveMongoConfiguration {
 
     @Autowired
     WebSocketHandler webSocketHandler;
-    @Autowired
-    private ReactiveUserDetailsService userDetailsService;
 
     @Bean
     SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity serverHttpSecurity) {
@@ -47,7 +46,6 @@ public class Config {
                 .and()
                 .httpBasic().authenticationEntryPoint(new HttpBasicServerAuthenticationEntryPoint())
                 .and()
-                .csrf().disable()
                 .build();
     }
 
@@ -71,4 +69,13 @@ public class Config {
         return new WebSocketHandlerAdapter();
     }
 
+    @Override
+    public MongoClient reactiveMongoClient() {
+        return MongoClients.create();
+    }
+
+    @Override
+    protected String getDatabaseName() {
+        return "test-mongo";
+    }
 }
