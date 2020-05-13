@@ -6,11 +6,11 @@ import reactor.core.publisher.Mono;
 
 public interface IFriendsService {
 
-    Mono<ResponseEntity> sendFriendRequest(String sender, String receiver);
+    Mono<ResponseEntity> sendFriendRequest(String main, String other);
 
-    Mono<User> acceptRequest(String receiver, String sender);
+    Mono<User> acceptRequest(String main, String other);
 
-    Mono<User> cancelRequest(String receiver, String sender);
+    Mono<User> cancelRequest(String main, String other);
 
-    Mono<User> deleteFriend(String username, String friendName);
+    Mono<User> deleteFriend(String main, String other);
 }

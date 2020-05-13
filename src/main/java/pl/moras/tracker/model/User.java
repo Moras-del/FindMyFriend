@@ -1,23 +1,26 @@
 package pl.moras.tracker.model;
 
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import lombok.*;
-
-import org.neo4j.springframework.data.core.schema.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-@Node
+@Document
 @Data
 @EqualsAndHashCode(exclude = "friends")
 public class User {
 
     @Id
-    @GeneratedValue
-    private Long id;
-
+    private String id;
 
     private String name;
 
@@ -32,13 +35,11 @@ public class User {
 
     private boolean trackEnabled; //user wants to being seen and he wants to see others
 
-    @Relationship(type = "FRIENDS")
     @Setter(AccessLevel.NONE)
     @Getter(AccessLevel.NONE)
     @JsonIgnoreProperties(value = "friends")
     private Set<User> friends = new HashSet<>();
 
-    @Relationship(type = "REQUEST", direction = Relationship.Direction.INCOMING)
     @JsonProperty("friend_requests")
     @Setter(AccessLevel.NONE)
     @Getter(AccessLevel.NONE)
@@ -59,11 +60,11 @@ public class User {
         friendRequests.add(friendRequest);
     }
 
-    public void deleteFriendRequest(User requestedUser){
+    public void removeFriendRequest(User requestedUser) {
         friendRequests.remove(requestedUser);
     }
 
-    public void deleteFriend(User friend){
+    public void removeFriend(User friend) {
         friends.remove(friend);
     }
 

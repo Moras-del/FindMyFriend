@@ -1,8 +1,10 @@
 package pl.moras.tracker.services;
 
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import pl.moras.tracker.exceptions.UsernameAlreadyExists;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.model.UserDto;
 import pl.moras.tracker.repo.UserRepo;
@@ -19,6 +21,8 @@ public class AuthService implements IAuthService {
     @Override
     public Mono<User> addUser(UserDto userDto) {
         return Mono.just(userDto)
+                .filterWhen(dto -> userRepo.notExistsByName(dto.getUsername()))
+                .switchIfEmpty(Mono.error(new UsernameAlreadyExists(userDto.getUsername() + " already exists")))
                 .map(this::toUser)
                 .flatMap(userRepo::save);
     }
@@ -26,6 +30,7 @@ public class AuthService implements IAuthService {
     @Override
     public Mono<User> getUser(String name) {
         return userRepo.findByName(name)
+                .switchIfEmpty(Mono.error(new UsernameNotFoundException(name + " not found")))
                 .map(this::updateLastOnline)
                 .flatMap(userRepo::save);
     }

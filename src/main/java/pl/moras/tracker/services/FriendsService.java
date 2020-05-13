@@ -2,11 +2,12 @@ package pl.moras.tracker.services;
 
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.moras.tracker.model.User;
+import pl.moras.tracker.model.UserRequestConnection;
 import pl.moras.tracker.repo.UserRepo;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 @Service
 @AllArgsConstructor
@@ -15,65 +16,93 @@ public class FriendsService implements IFriendsService {
     private final UserRepo userRepo;
 
     @Override
-    public Mono<ResponseEntity> sendFriendRequest(String sender, String receiver) {
-        return toUsers(sender, receiver)
-                .map(users->persistRequest(users.getT1(), users.getT2()));
+    public Mono<ResponseEntity> sendFriendRequest(String main, String other) {
+        return toUsers(main, other)
+                .filter(this::usersAreDifferent)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("You can't add yourself")))
+                .filter(this::requestNotSentYet)
+                .switchIfEmpty(Mono.error(new IllegalArgumentException("You have already sent request to this user")))
+                .flatMap(this::saveRequest)
+                .map(users -> ResponseEntity.ok().build());
+    }
+
+    private boolean usersAreDifferent(UserRequestConnection users) {
+        return !users.getMain().getName().equals(users.getOther().getName());
+    }
+
+    private boolean requestNotSentYet(UserRequestConnection userRequestConnection) {
+        User other = userRequestConnection.getOther();
+        User main = userRequestConnection.getMain();
+        boolean notRequested = !other.getFriendRequests().contains(main);
+        boolean notFriends = !other.getFriends().contains(main);
+        return notRequested && notFriends;
+    }
+
+    private Mono<User> saveRequest(UserRequestConnection users) {
+        User main = users.getMain();
+        User other = users.getOther();
+        other.addFriendRequest(main);
+        return userRepo.save(other);
     }
 
     @Override
-    public Mono<User> acceptRequest(String receiver, String sender) {
-        return toUsers(sender, receiver)
-                .flatMap(users->addFriend(users.getT1(), users.getT2()));
+    public Mono<User> acceptRequest(String main, String other) {
+        return toUsers(main, other)
+                .map(this::addFriend)
+                .flatMap(users -> userRepo.save(users.getMain()));
+    }
+
+    private UserRequestConnection addFriend(UserRequestConnection users) {
+        User main = users.getMain();
+        User other = users.getOther();
+        main.removeFriendRequest(other);
+        main.addFriend(other);
+        main.addFriend(other);
+        return users;
     }
 
     @Override
-    public Mono<User> cancelRequest(String receiver, String sender) {
-        return toUsers(sender, receiver)
-                .flatMap(users->{
-                    users.getT2().deleteFriendRequest(users.getT1());
-                    return userRepo.save(users.getT2());
-                });
+    public Mono<User> cancelRequest(String main, String other) {
+        return toUsers(main, other)
+                .map(users -> {
+                    users.getMain().removeFriendRequest(users.getOther());
+                    return users;
+                })
+                .flatMap(users -> userRepo.save(users.getMain()));
     }
 
     @Override
-    public Mono<User> deleteFriend(String username, String friendName) {
-        return toUsers(username, friendName)
-                .flatMap(users->{
-                    User user = users.getT1();
-                    User friend = users.getT2();
-                    user.deleteFriend(friend);
-                    friend.deleteFriend(user);
-                    return userRepo.save(user);
-                });
+    public Mono<User> deleteFriend(String main, String other) {
+        return toUsers(main, other)
+                .map(this::detachFriends)
+                .flatMap(users -> userRepo.save(users.getMain()));
     }
 
 
-    private Mono<Tuple2<User, User>> toUsers(String sender, String receiver) {
-        Mono<User> userMono = getUser(sender);
-        Mono<User> requestedUserMono = getUser(receiver);
-        return userMono.zipWith(requestedUserMono);
+    private UserRequestConnection detachFriends(UserRequestConnection users) {
+        User main = users.getMain();
+        User other = users.getOther();
+        main.removeFriend(other);
+        other.removeFriend(main);
+        return users;
+    }
+
+
+    private Mono<UserRequestConnection> toUsers(String main, String other) {
+        Mono<User> mainUser = getUser(main);
+        Mono<User> otherUser = getUser(other);
+        return mainUser.zipWith(otherUser)
+                .map(users -> UserRequestConnection
+                        .builder()
+                        .withMain(users.getT1())
+                        .withOther(users.getT2())
+                        .build());
     }
 
     private Mono<User> getUser(String name){
-         return userRepo.findByName(name);
-                //.orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika "+name));
+        return userRepo.findByName(name)
+                .switchIfEmpty(Mono.error(new UsernameNotFoundException(name + " not found")));
     }
 
-    private ResponseEntity persistRequest(User sender, User receiver){
-        boolean isAlreadyFriend = receiver.getFriends().contains(sender);
-        if (!isAlreadyFriend){
-            receiver.addFriendRequest(sender);
-            userRepo.save(receiver);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.badRequest().body("juz jest twoim znajomym");
-    }
-
-    private Mono<User> addFriend(User sender, User receiver) {
-        receiver.deleteFriendRequest(sender);
-        receiver.addFriend(sender);
-        sender.addFriend(receiver);
-        return userRepo.save(receiver);
-    }
 
 }
