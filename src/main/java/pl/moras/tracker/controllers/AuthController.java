@@ -18,7 +18,7 @@ public class AuthController {
     private final IAuthService authService;
 
     @PostMapping
-    public Mono<User> register(@RequestBody UserDto userDto){
+    public Mono<User> register(@RequestBody UserDto userDto) {
         return authService.addUser(userDto);
     }
 

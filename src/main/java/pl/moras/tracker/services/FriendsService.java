@@ -33,8 +33,8 @@ public class FriendsService implements IFriendsService {
     private boolean requestNotSentYet(UserRequestConnection userRequestConnection) {
         User other = userRequestConnection.getOther();
         User main = userRequestConnection.getMain();
-        boolean notRequested = !other.getFriendRequests().contains(main);
-        boolean notFriends = !other.getFriends().contains(main);
+        boolean notRequested = !other.hasFriendRequest(main);
+        boolean notFriends = !other.hasFriend(main);
         return notRequested && notFriends;
     }
 

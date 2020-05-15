@@ -12,5 +12,5 @@ public interface UserRepo extends ReactiveMongoRepository<User, String> {
 
     //Flux<User> findOnlineFriends(String name);
 
-    Mono<Boolean> notExistsByName(String username);
+    Mono<Boolean> existsByNameNot(String username);
 }

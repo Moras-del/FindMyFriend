@@ -42,10 +42,11 @@ public class Config extends AbstractReactiveMongoConfiguration {
         return serverHttpSecurity
                 .authorizeExchange()
                 .pathMatchers(HttpMethod.POST, "/auth").permitAll()
-                .anyExchange().permitAll()
+                .anyExchange().authenticated()
                 .and()
                 .httpBasic().authenticationEntryPoint(new HttpBasicServerAuthenticationEntryPoint())
                 .and()
+                .csrf().disable()
                 .build();
     }
 
@@ -71,11 +72,12 @@ public class Config extends AbstractReactiveMongoConfiguration {
 
     @Override
     public MongoClient reactiveMongoClient() {
-        return MongoClients.create();
+        return MongoClients.create("mongodb://localhost:27017");
     }
 
     @Override
     protected String getDatabaseName() {
-        return "test-mongo";
+        return "tracker";
     }
+
 }

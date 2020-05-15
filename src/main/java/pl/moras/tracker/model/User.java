@@ -2,21 +2,18 @@ package pl.moras.tracker.model;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonUnwrapped;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
 
 @Document
 @Data
-@EqualsAndHashCode(exclude = "friends")
 public class User {
 
     @Id
@@ -33,17 +30,13 @@ public class User {
     @JsonUnwrapped
     private Location location;
 
-    private boolean trackEnabled; //user wants to being seen and he wants to see others
+    private boolean trackEnabled;
 
-    @Setter(AccessLevel.NONE)
+    //@JsonIdentityInfo(generator = ObjectIdGenerators.StringIdGenerator.class)
+    @JsonUnwrapped
     @Getter(AccessLevel.NONE)
-    @JsonIgnoreProperties(value = "friends")
-    private Set<User> friends = new HashSet<>();
-
-    @JsonProperty("friend_requests")
     @Setter(AccessLevel.NONE)
-    @Getter(AccessLevel.NONE)
-    private Set<User> friendRequests = new HashSet<>();
+    private Relations relations = new Relations();
 
     public User() { }
 
@@ -53,31 +46,38 @@ public class User {
     }
 
     public void addFriend(User user){
-        friends.add(user);
+        relations.getFriends().add(user);
     }
 
     public void addFriendRequest(User friendRequest) {
-        friendRequests.add(friendRequest);
+        relations.getFriendRequests().add(friendRequest);
     }
 
     public void removeFriendRequest(User requestedUser) {
-        friendRequests.remove(requestedUser);
+        relations.getFriendRequests().remove(requestedUser);
     }
 
     public void removeFriend(User friend) {
-        friends.remove(friend);
-    }
-
-    public Set<User> getFriends() {
-        return Collections.unmodifiableSet(friends);
-    }
-
-    public Set<User> getFriendRequests(){
-        return Collections.unmodifiableSet(friendRequests);
+        relations.getFriends().remove(friend);
     }
 
     public void updateLastOnlineDate(){
         lastOnline = LocalDateTime.now();
     }
 
+    public boolean hasFriendRequest(User user) {
+        return relations.getFriendRequests().contains(user);
+    }
+
+    public boolean hasFriend(User user) {
+        return relations.getFriends().contains(user);
+    }
+
+    public boolean hasAnyFriends() {
+        return !relations.getFriends().isEmpty();
+    }
+
+    public boolean hasAnyFriendRequest() {
+        return !relations.getFriendRequests().isEmpty();
+    }
 }

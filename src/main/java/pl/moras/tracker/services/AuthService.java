@@ -21,7 +21,7 @@ public class AuthService implements IAuthService {
     @Override
     public Mono<User> addUser(UserDto userDto) {
         return Mono.just(userDto)
-                .filterWhen(dto -> userRepo.notExistsByName(dto.getUsername()))
+                .filterWhen(dto -> userRepo.existsByNameNot(dto.getUsername()))
                 .switchIfEmpty(Mono.error(new UsernameAlreadyExists(userDto.getUsername() + " already exists")))
                 .map(this::toUser)
                 .flatMap(userRepo::save);
