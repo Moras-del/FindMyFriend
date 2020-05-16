@@ -3,18 +3,18 @@ package pl.moras.tracker.exceptions;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import reactor.core.publisher.Mono;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class ExceptionsHandler {
 
-    @ResponseBody
-    @ExceptionHandler({UsernameAlreadyExists.class, UsernameNotFoundException.class, AccessDeniedException.class})
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public String exception(Exception exception){
-        return exception.getMessage();
+    @ExceptionHandler({UsernameAlreadyExists.class, UsernameNotFoundException.class, AccessDeniedException.class, IllegalArgumentException.class})
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Mono<String> exception(Exception exception) {
+        return Mono.just(exception)
+                .map(Throwable::getMessage);
     }
 }

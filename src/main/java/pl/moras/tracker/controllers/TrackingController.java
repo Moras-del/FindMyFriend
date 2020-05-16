@@ -1,11 +1,13 @@
 package pl.moras.tracker.controllers;
 
 import lombok.AllArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import pl.moras.tracker.model.LocationDto;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.services.IAuthService;
 import pl.moras.tracker.services.ITrackingService;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
@@ -38,5 +40,11 @@ public class TrackingController {
         return Mono.just(principal.getName())
                 .flatMap(authService::getUser)
                 .flatMap(user->trackingService.updateLocation(user, locationDto));
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.APPLICATION_STREAM_JSON_VALUE)
+    public Flux<User> getOnlineUsers(Principal principal) {
+        return Flux.just("sad")
+                .flatMap(e -> trackingService.getOnlineFriends("f"));
     }
 }
