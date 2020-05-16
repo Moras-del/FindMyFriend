@@ -6,14 +6,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.model.UserRequestConnection;
-import pl.moras.tracker.repo.UserRepo;
+import pl.moras.tracker.repo.MongoDao;
 import reactor.core.publisher.Mono;
 
 @Service
 @AllArgsConstructor
 public class FriendsService implements IFriendsService {
 
-    private final UserRepo userRepo;
+    private final MongoDao mongoDao;
 
     @Override
     public Mono<ResponseEntity> sendFriendRequest(String main, String other) {
@@ -42,14 +42,14 @@ public class FriendsService implements IFriendsService {
         User main = users.getMain();
         User other = users.getOther();
         other.addFriendRequest(main);
-        return userRepo.save(other);
+        return mongoDao.save(other);
     }
 
     @Override
     public Mono<User> acceptRequest(String main, String other) {
         return toUsers(main, other)
                 .map(this::addFriend)
-                .flatMap(users -> userRepo.save(users.getMain()));
+                .flatMap(users -> mongoDao.save(users.getMain()));
     }
 
     private UserRequestConnection addFriend(UserRequestConnection users) {
@@ -68,14 +68,14 @@ public class FriendsService implements IFriendsService {
                     users.getMain().removeFriendRequest(users.getOther());
                     return users;
                 })
-                .flatMap(users -> userRepo.save(users.getMain()));
+                .flatMap(users -> mongoDao.save(users.getMain()));
     }
 
     @Override
     public Mono<User> deleteFriend(String main, String other) {
         return toUsers(main, other)
                 .map(this::detachFriends)
-                .flatMap(users -> userRepo.save(users.getMain()));
+                .flatMap(users -> mongoDao.save(users.getMain()));
     }
 
 
@@ -100,7 +100,7 @@ public class FriendsService implements IFriendsService {
     }
 
     private Mono<User> getUser(String name){
-        return userRepo.findByName(name)
+        return mongoDao.findByName(name)
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException(name + " not found")));
     }
 

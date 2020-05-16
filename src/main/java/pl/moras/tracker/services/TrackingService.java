@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import pl.moras.tracker.model.Location;
 import pl.moras.tracker.model.LocationDto;
 import pl.moras.tracker.model.User;
-import pl.moras.tracker.repo.UserRepo;
+import pl.moras.tracker.repo.MongoDao;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,11 +13,11 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class TrackingService implements ITrackingService {
 
-    private final UserRepo userRepo;
+    private final MongoDao mongoDao;
 
     @Override
     public Flux<User> getOnlineFriends(String name) {
-        return userRepo.findAll();
+        return mongoDao.findAll();
     }
 
     @Override
@@ -27,7 +27,7 @@ public class TrackingService implements ITrackingService {
                     person.setLocation(Location.of(locationDto));
                     return person;
                 })
-                .flatMap(userRepo::save);
+                .flatMap(mongoDao::save);
     }
 
     @Override
@@ -37,7 +37,7 @@ public class TrackingService implements ITrackingService {
                     person.setTrackEnabled(true);
                     return person;
                 })
-                .flatMap(userRepo::save);
+                .flatMap(mongoDao::save);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class TrackingService implements ITrackingService {
                     person.setTrackEnabled(false);
                     return person;
                 })
-                .flatMap(userRepo::save);
+                .flatMap(mongoDao::save);
     }
 
 

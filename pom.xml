@@ -18,15 +18,19 @@
 		<java.version>1.8</java.version>
 	</properties>
 
-	<dependencies>
+    <repositories>
+        <repository>
+            <id>bintray-kptfh-feign-reactive</id>
+            <name>bintray</name>
+            <url>https://dl.bintray.com/kptfh/json-reactive</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-messaging</artifactId>
 		</dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

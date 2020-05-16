@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import pl.moras.tracker.exceptions.UsernameAlreadyExists;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.model.UserDto;
-import pl.moras.tracker.repo.UserRepo;
+import pl.moras.tracker.repo.MongoDao;
 import reactor.core.publisher.Mono;
 
 
@@ -15,24 +15,24 @@ import reactor.core.publisher.Mono;
 @AllArgsConstructor
 public class AuthService implements IAuthService {
 
-    private final UserRepo userRepo;
+    private final MongoDao mongoDao;
     private final PasswordEncoder passwordEncoder;
 
     @Override
     public Mono<User> addUser(UserDto userDto) {
         return Mono.just(userDto)
-                .filterWhen(dto -> userRepo.existsByNameNot(dto.getUsername()))
+                .filterWhen(dto -> mongoDao.notExists(dto.getUsername()))
                 .switchIfEmpty(Mono.error(new UsernameAlreadyExists(userDto.getUsername() + " already exists")))
                 .map(this::toUser)
-                .flatMap(userRepo::save);
+                .flatMap(mongoDao::save);
     }
 
     @Override
     public Mono<User> getUser(String name) {
-        return userRepo.findByName(name)
+        return mongoDao.findByName(name)
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException(name + " not found")))
                 .map(this::updateLastOnline)
-                .flatMap(userRepo::save);
+                .flatMap(mongoDao::save);
     }
 
     private User updateLastOnline(User user){
