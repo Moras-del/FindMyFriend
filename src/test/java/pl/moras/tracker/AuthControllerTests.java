@@ -1,97 +1,86 @@
 package pl.moras.tracker;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.reactive.server.WebTestClient;
-
+import pl.moras.fakes.TestConfig;
 import pl.moras.tracker.controllers.AuthController;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.model.UserDto;
-import pl.moras.tracker.services.IAuthService;
 
+import static org.junit.jupiter.api.Assertions.*;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-
-@RunWith(SpringRunner.class)
 @WebFluxTest(AuthController.class)
+@ContextConfiguration(classes = TestConfig.class)
 class AuthControllerTests {
 
     @Autowired
-    private WebTestClient webTestClient;
-
-    @MockBean
-    private IAuthService authService;
-
-    private ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setup(){
-        objectMapper = new ObjectMapper();
-//        when(authService.addUser(anyString(), anyString())).thenAnswer(arg->{
-//            User user = new User();
-//            user.setName(arg.getArgument(0));
-//            user.setPassword(arg.getArgument(1));
-//            return user;
-//        });
-//        when(authService.getUser(anyString())).thenAnswer(arg->{
-//            User user = new User();
-//            user.setName(arg.getArgument(0));
-//            user.setPassword("haslo");
-//            return user;
-//        });
-    }
-
+    private WebTestClient client;
 
     @Test
-    void should_register() throws Exception {
+    void should_register() {
         UserDto userDto = new UserDto();
-        userDto.setUsername("user");
-        userDto.setPassword("haslo");
-
-        String requestBody = objectMapper.writeValueAsString(userDto);
-        String responseBody = objectMapper.writeValueAsString(getUser("user"));
-
-        webTestClient.post()
+        userDto.setUsername("principal");
+        userDto.setPassword("password");
+        client.post()
                 .uri("/auth")
-                .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(userDto)
                 .exchange()
                 .expectStatus().isOk()
-                .expectBody().json(responseBody);
+                .expectBody(User.class)
+                .value(user -> assertEquals("principal", user.getName()))
+                .value(user -> assertNull(user.getPassword()))
+                .value(user -> assertNotNull(user.getLastOnline()));
     }
 
-//    @Test
-//    @WithMockUser(username = "principal")
-//    void should_authenticate() throws Exception {
-//        String response = objectMapper.writeValueAsString(getUser("principal"));
-//        mockMvc.perform(get("/auth"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().json(response));
-//    }
-//
-//    @Test
-//    @WithAnonymousUser
-//    void should_fail_authenticate() throws Exception {
-//        mockMvc.perform(get("/auth"))
-//                .andExpect(status().isUnauthorized());
-//    }
-
-    User getUser(String name){
-        User user = new User();
-        user.setName(name);
-        user.setPassword("haslo");
-        return user;
+    @Test
+    void should_throw_username_already_exists() {
+        UserDto userDto = new UserDto();
+        userDto.setUsername("user");
+        userDto.setPassword("password");
+        client.post()
+                .uri("/auth")
+                .bodyValue(userDto)
+                .exchange()
+                .expectStatus().is4xxClientError()
+                .expectBody(String.class)
+                .value(response -> assertEquals("user already exists", response));
     }
 
+    @Test
+    @WithMockUser(username = "user")
+    void should_authenticate() {
+        client.get()
+                .uri("/auth")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User.class)
+                .value(user -> assertEquals("user", user.getName()))
+                .value(user -> assertNull(user.getPassword()))
+                .value(user -> assertNotNull(user.getLastOnline()));
+    }
+
+    @Test
+    void should_get_unauthorized() {
+        client.get()
+                .uri("/auth")
+                .exchange()
+                .expectStatus().isUnauthorized();
+    }
+
+    @Test
+    @WithMockUser(username = "non-existing-user")
+    void should_throw_username_not_found() {
+        client.get()
+                .uri("/auth")
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .value(response -> assertEquals("non-existing-user not found", response));
+
+    }
 }

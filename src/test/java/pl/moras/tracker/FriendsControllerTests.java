@@ -1,106 +1,94 @@
 package pl.moras.tracker;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import pl.moras.fakes.TestConfig;
+import pl.moras.tracker.controllers.FriendsController;
 import pl.moras.tracker.model.User;
-import pl.moras.tracker.services.IFriendsService;
-import reactor.core.publisher.Mono;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.*;
 
-@AutoConfigureMockMvc
-@SpringBootTest
-@WithMockUser(username = "principal")
+@WebFluxTest(FriendsController.class)
+@ContextConfiguration(classes = TestConfig.class)
 class FriendsControllerTests {
 
     @Autowired
-    private MockMvc mockMvc;
+    private WebTestClient client;
 
-    @MockBean
-    private IFriendsService friendsService;
-
-    private ObjectMapper objectMapper;
-
-    @BeforeEach
-    void setup(){
-        objectMapper = new ObjectMapper();
-
+    @Test
+    @WithMockUser("principal")
+    void should_send_request() {
+        client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/friends/request")
+                        .queryParam("friendName", "other")
+                        .build())
+                .exchange()
+                .expectStatus().isOk();
     }
 
     @Test
-    void should_fail_send_request() throws Exception {
-        mockMvc.perform(post("/friends/request"))
-                .andExpect(status().isBadRequest());
+    @WithMockUser("principal")
+    void should_send_fail_request() {
+        client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/friends/request")
+                        .queryParam("friendName", "principal")
+                        .build())
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody(String.class)
+                .value(response -> assertEquals("You can't add yourself", response));
     }
 
     @Test
-    void should_send_request() throws Exception {
-        when(friendsService.sendFriendRequest(anyString(), anyString())).thenReturn(Mono.just(ResponseEntity.ok().build()));
-
-        mockMvc.perform(post("/friends/request")
-                .param("friendName", "friend"))
-                .andExpect(status().isOk());
+    @WithMockUser(username = "user")
+    void should_accept_friend_request() {
+        client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/friends/accept")
+                        .queryParam("friendName", "other")
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User.class)
+                .value(user -> assertEquals("user", user.getName()))
+                .value(user -> assertTrue(user.hasAnyFriends()));
     }
 
     @Test
-    void should_accept_friend_request() throws Exception {
-        when(friendsService.acceptRequest(anyString(), anyString())).thenAnswer(arg->{
-            User user = getUser(arg.getArgument(0));
-            user.addFriend(getUser(arg.getArgument(1)));
-            return user;
-        });
-
-        User user = getUser("principal");
-        user.addFriend(getUser("friend"));
-        String response = objectMapper.writeValueAsString(user);
-
-        mockMvc.perform(post("/friends/accept")
-                .param("friendName", "friend"))
-                .andExpect(status().isOk())
-                .andExpect(content().json(response));
+    @WithMockUser(username = "user")
+    void should_cancel_friend_request() {
+        client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/friends/cancel")
+                        .queryParam("friendName", "other")
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User.class)
+                .value(user -> assertEquals("user", user.getName()))
+                .value(user -> assertFalse(user.hasAnyFriendRequest()));
     }
 
     @Test
-    void should_cancel_friend_request() throws Exception {
-        when(friendsService.cancelRequest(anyString(), anyString())).thenReturn(Mono.just(getUser("user")));
-        String response = objectMapper.writeValueAsString(getUser("user"));
-
-        mockMvc.perform(post("/friends/cancel")
-                        .param("friendName", "friend"))
-                        .andExpect(status().isOk())
-                        .andExpect(content().json(response));
+    @WithMockUser(username = "user")
+    void should_delete_friend() {
+        client.post()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/friends/delete")
+                        .queryParam("friendName", "other")
+                        .build())
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(User.class)
+                .value(user -> assertEquals("user", user.getName()))
+                .value(user -> assertFalse(user.hasAnyFriends()));
     }
 
-    @Test
-    void should_delete_friend() throws Exception {
-        when(friendsService.deleteFriend(anyString(), anyString())).thenReturn(Mono.just(getUser("user")));
-        String response = objectMapper.writeValueAsString(getUser("user"));
-
-        mockMvc.perform(post("/friends/delete")
-                        .param("friendName", "friend"))
-                        .andExpect(status().isOk())
-                        .andExpect(content().json(response));
-    }
-
-
-    User getUser(String name){
-        User user = new User();
-        user.setName(name);
-        user.setPassword("haslo");
-        return user;
-    }
 
 }
