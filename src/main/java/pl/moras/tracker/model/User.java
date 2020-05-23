@@ -1,23 +1,30 @@
 package pl.moras.tracker.model;
 
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AccessLevel;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import org.neo4j.ogm.annotation.GeneratedValue;
+import org.neo4j.ogm.annotation.Id;
+import org.neo4j.ogm.annotation.NodeEntity;
+import org.neo4j.ogm.annotation.Relationship;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
-@Document
-@Data
+@NodeEntity("person")
+@Getter
+@Setter
+@JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
 public class User {
 
     @Id
-    private String id;
+    @GeneratedValue
+    private Long id;
 
     private String name;
 
@@ -27,16 +34,26 @@ public class User {
     @Setter(AccessLevel.NONE)
     private LocalDateTime lastOnline;
 
-    @JsonUnwrapped
     private Location location;
 
-    private boolean trackEnabled;
+    private boolean trackingEnabled;
 
-    //@JsonIdentityInfo(generator = ObjectIdGenerators.StringIdGenerator.class)
-    @JsonUnwrapped
+//    @Setter(AccessLevel.NONE)
+//    @Getter(AccessLevel.NONE)
+//    private Relations relations = new Relations();
+
+    @JsonIgnoreProperties(value = {"friendRequests", "friends"})
     @Getter(AccessLevel.NONE)
     @Setter(AccessLevel.NONE)
-    private Relations relations = new Relations();
+    @Relationship(type = "FRIENDS")
+    private Set<User> friends = new HashSet<>();
+
+    @JsonIgnoreProperties(value = {"friends", "friendRequests"})
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    @Relationship(type = "REQUEST", direction = Relationship.INCOMING)
+    private Set<User> friendRequests = new HashSet<>();
+
 
     public User() { }
 
@@ -46,19 +63,19 @@ public class User {
     }
 
     public void addFriend(User user){
-        relations.getFriends().add(user);
+        friends.add(user);
     }
 
     public void addFriendRequest(User friendRequest) {
-        relations.getFriendRequests().add(friendRequest);
+        friendRequests.add(friendRequest);
     }
 
     public void removeFriendRequest(User requestedUser) {
-        relations.getFriendRequests().remove(requestedUser);
+        friendRequests.remove(requestedUser);
     }
 
     public void removeFriend(User friend) {
-        relations.getFriends().remove(friend);
+        friends.remove(friend);
     }
 
     public void updateLastOnlineDate(){
@@ -66,18 +83,18 @@ public class User {
     }
 
     public boolean hasFriendRequest(User user) {
-        return relations.getFriendRequests().contains(user);
+        return friendRequests.contains(user);
     }
 
     public boolean hasFriend(User user) {
-        return relations.getFriends().contains(user);
+        return friends.contains(user);
     }
 
     public boolean hasAnyFriends() {
-        return !relations.getFriends().isEmpty();
+        return !friends.isEmpty();
     }
 
     public boolean hasAnyFriendRequest() {
-        return !relations.getFriendRequests().isEmpty();
+        return !friendRequests.isEmpty();
     }
 }

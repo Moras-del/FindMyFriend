@@ -7,45 +7,40 @@ import org.springframework.stereotype.Service;
 import pl.moras.tracker.exceptions.UsernameAlreadyExists;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.model.UserDto;
-import pl.moras.tracker.repo.MongoDao;
-import reactor.core.publisher.Mono;
+import pl.moras.tracker.repo.UserRepository;
 
 
 @Service
 @AllArgsConstructor
 public class AuthService implements IAuthService {
 
-    private final MongoDao mongoDao;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public Mono<User> addUser(UserDto userDto) {
-        return Mono.just(userDto)
-                .filterWhen(dto -> mongoDao.notExists(dto.getUsername()))
-                .switchIfEmpty(Mono.error(new UsernameAlreadyExists(userDto.getUsername() + " already exists")))
-                .map(this::toUser)
-                .flatMap(mongoDao::save);
-    }
 
     @Override
-    public Mono<User> getUser(String name) {
-        return mongoDao.findByName(name)
-                .switchIfEmpty(Mono.error(new UsernameNotFoundException(name + " not found")))
-                .map(this::updateLastOnline)
-                .flatMap(mongoDao::save);
-    }
-
-    private User updateLastOnline(User user){
+    public User addUser(UserDto userDto) {
+        if (userRepository.existsByName(userDto.getUsername()))
+            throw new UsernameAlreadyExists(userDto.getUsername() + " already exists");
+        User user = toUser(userDto);
         user.updateLastOnlineDate();
-        return user;
+        return userRepository.save(user);
     }
+
+
+    @Override
+    public User getUser(String name) {
+        User user = userRepository.findByName(name).orElseThrow(() -> new UsernameNotFoundException(name + " does not exists"));
+        user.updateLastOnlineDate();
+        return userRepository.save(user);
+    }
+
 
     private User toUser(UserDto userDto){
         String hashPassword = passwordEncoder.encode(userDto.getPassword());
         User user = new User();
         user.setName(userDto.getUsername());
         user.setPassword(hashPassword);
-        user.updateLastOnlineDate();
         return user;
     }
 

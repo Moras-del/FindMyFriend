@@ -6,24 +6,26 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import pl.moras.tracker.model.User;
 import pl.moras.tracker.model.UserRequestConnection;
-import pl.moras.tracker.repo.MongoDao;
-import reactor.core.publisher.Mono;
+import pl.moras.tracker.repo.UserRepository;
+
 
 @Service
 @AllArgsConstructor
 public class FriendsService implements IFriendsService {
 
-    private final MongoDao mongoDao;
+    private final UserRepository userRepository;
 
     @Override
-    public Mono<ResponseEntity> sendFriendRequest(String main, String other) {
-        return toUsers(main, other)
-                .filter(this::usersAreDifferent)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("You can't add yourself")))
-                .filter(this::requestNotSentYet)
-                .switchIfEmpty(Mono.error(new IllegalArgumentException("You have already sent request to this user")))
-                .flatMap(this::saveRequest)
-                .map(users -> ResponseEntity.ok().build());
+    public ResponseEntity sendFriendRequest(String main, String other) {
+        UserRequestConnection users = toUsers(main, other);
+        if (usersAreDifferent(users) && requestNotSentYet(users)) {
+            saveRequest(users);
+            return ResponseEntity.ok().build();
+        } else {
+            String errorMessage = getErrorMessage(users);
+            return ResponseEntity.badRequest().body(errorMessage);
+        }
+
     }
 
     private boolean usersAreDifferent(UserRequestConnection users) {
@@ -38,71 +40,70 @@ public class FriendsService implements IFriendsService {
         return notRequested && notFriends;
     }
 
-    private Mono<User> saveRequest(UserRequestConnection users) {
+    private void saveRequest(UserRequestConnection users) {
         User main = users.getMain();
         User other = users.getOther();
         other.addFriendRequest(main);
-        return mongoDao.save(other);
+        userRepository.save(other);
+    }
+
+    private String getErrorMessage(UserRequestConnection users) {
+        if (!usersAreDifferent(users))
+            return "You can't add yourself";
+        else
+            return "You have already sent a request to this user";
     }
 
     @Override
-    public Mono<User> acceptRequest(String main, String other) {
-        return toUsers(main, other)
-                .map(this::addFriend)
-                .flatMap(users -> mongoDao.save(users.getMain()));
+    public User acceptRequest(String main, String other) {
+        UserRequestConnection users = toUsers(main, other);
+        addFriend(users);
+        return userRepository.save(users.getMain());
     }
 
-    private UserRequestConnection addFriend(UserRequestConnection users) {
+    private void addFriend(UserRequestConnection users) {
         User main = users.getMain();
         User other = users.getOther();
         main.removeFriendRequest(other);
         main.addFriend(other);
-        main.addFriend(other);
-        return users;
+        other.addFriend(main);
     }
 
     @Override
-    public Mono<User> cancelRequest(String main, String other) {
-        return toUsers(main, other)
-                .map(users -> {
-                    users.getMain().removeFriendRequest(users.getOther());
-                    return users;
-                })
-                .flatMap(users -> mongoDao.save(users.getMain()));
+    public User cancelRequest(String main, String other) {
+        UserRequestConnection users = toUsers(main, other);
+        users.getMain().removeFriendRequest(users.getOther());
+        return userRepository.save(users.getMain());
     }
 
     @Override
-    public Mono<User> deleteFriend(String main, String other) {
-        return toUsers(main, other)
-                .map(this::detachFriends)
-                .flatMap(users -> mongoDao.save(users.getMain()));
+    public User deleteFriend(String main, String other) {
+        UserRequestConnection users = toUsers(main, other);
+        detachFriends(users);
+        return userRepository.save(users.getMain());
     }
 
 
-    private UserRequestConnection detachFriends(UserRequestConnection users) {
+    private void detachFriends(UserRequestConnection users) {
         User main = users.getMain();
         User other = users.getOther();
         main.removeFriend(other);
         other.removeFriend(main);
-        return users;
     }
 
 
-    private Mono<UserRequestConnection> toUsers(String main, String other) {
-        Mono<User> mainUser = getUser(main);
-        Mono<User> otherUser = getUser(other);
-        return mainUser.zipWith(otherUser)
-                .map(users -> UserRequestConnection
+    private UserRequestConnection toUsers(String main, String other) {
+        User mainUser = getUser(main);
+        User otherUser = getUser(other);
+        return UserRequestConnection
                         .builder()
-                        .withMain(users.getT1())
-                        .withOther(users.getT2())
-                        .build());
+                .withMain(mainUser)
+                .withOther(otherUser)
+                .build();
     }
 
-    private Mono<User> getUser(String name){
-        return mongoDao.findByName(name)
-                .switchIfEmpty(Mono.error(new UsernameNotFoundException(name + " not found")));
+    private User getUser(String name) {
+        return userRepository.findByName(name).orElseThrow(() -> new UsernameNotFoundException(name + " does not exists"));
     }
-
 
 }

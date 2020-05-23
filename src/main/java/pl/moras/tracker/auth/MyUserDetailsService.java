@@ -1,21 +1,22 @@
 package pl.moras.tracker.auth;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import pl.moras.tracker.repo.MongoDao;
-import reactor.core.publisher.Mono;
+import pl.moras.tracker.model.User;
+import pl.moras.tracker.repo.UserRepository;
 
 @Service
-public class MyUserDetailsService implements ReactiveUserDetailsService {
+public class MyUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private MongoDao mongoDao;
+    private UserRepository userRepository;
 
     @Override
-    public Mono<UserDetails> findByUsername(String s) {
-        return mongoDao.findByName(s)
-                .map(MyUserDetails::new);
+    public UserDetails loadUserByUsername(String s) throws UsernameNotFoundException {
+        User user = userRepository.findByName(s).orElseThrow(() -> new UsernameNotFoundException(s + " does not exists"));
+        return new MyUserDetails(user);
     }
 }

@@ -1,58 +1,52 @@
 package pl.moras.tracker;
 
 
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
-import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.authentication.HttpBasicServerAuthenticationEntryPoint;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
 import pl.moras.tracker.model.User;
 
-//import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-@EnableWebFluxSecurity
 @EntityScan(basePackageClasses = User.class)
-@EnableReactiveMongoRepositories
-public class Config {
+@EnableNeo4jRepositories(basePackages = "pl.moras.tracker.repo")
+public class Config extends WebSecurityConfigurerAdapter {
 
-    @Bean
-    SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity serverHttpSecurity) {
-        return serverHttpSecurity
-                .authorizeExchange()
-                .pathMatchers(HttpMethod.POST, "/auth").permitAll()
-                .pathMatchers("/tracking/stream").permitAll()
-                .anyExchange().authenticated()
+
+    @Autowired
+    UserDetailsService userDetailsService;
+
+    @Autowired
+    BasicAuthenticationEntryPoint entryPoint;
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.authorizeRequests()
+                .antMatchers(HttpMethod.POST, "/auth").permitAll()
+                .anyRequest().authenticated()
                 .and()
-                .httpBasic().authenticationEntryPoint(new HttpBasicServerAuthenticationEntryPoint())
+                .httpBasic().authenticationEntryPoint(entryPoint)
                 .and()
-                .csrf().disable()
-                .build();
+                .csrf().disable();
+    }
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(getPasswordEncoder());
     }
 
     @Bean
     public PasswordEncoder getPasswordEncoder(){
         return new BCryptPasswordEncoder(16);
     }
-
-    @Bean
-    public MongoClient mongoClient() {
-        return MongoClients.create("mongodb://localhost:27017");
-    }
-
-    @Bean
-    public ReactiveMongoTemplate mongoTemplate() {
-        return new ReactiveMongoTemplate(mongoClient(), "mydatabase");
-    }
-
-
 }
